@@ -220,7 +220,7 @@ def generate(db: Session, student: Any, weights: Any, hard_filters: bool = False
     recommendations = _build_recommendations(db, student, values)
     profile_id = getattr(student, "id", None)
     if profile_id is None:
-        # Router mewajibkan profil siswa; ini mencegah run tanpa pemilik.
+        # Run harus punya pemilik, meski fungsi dipanggil tanpa melewati router.
         from fastapi import HTTPException
 
         raise HTTPException(status_code=409, detail="Profil siswa belum tersedia")

@@ -24,7 +24,7 @@ def require_secret():
 
 
 def hash_password(password: str):
-    # PHC menyimpan salt dan parameter Argon2id bersama hash; password tidak disimpan.
+    # Hash Argon2id sudah memuat salt dan parameternya; password asli tidak disimpan.
     return Argon2id(
         salt=os.urandom(16), length=32, iterations=3, lanes=4, memory_cost=64 * 1024
     ).derive_phc_encoded(password.encode())

@@ -117,7 +117,7 @@ def main():
     for district in ("016306", "016309", "016305"):
         page = fetch(BASE + "/pendidikan/dikmen/" + district + "/3/all/13/all")
         rows = [row for row in page.rows if len(row) >= 6 and re.fullmatch(r"\d{8}", row[1])]
-        # Include public and private schools, with deterministic selection per district.
+        # Ambil sekolah negeri dan swasta secara konsisten per kecamatan.
         rows.sort(key=lambda row: (row[-1] != "NEGERI", row[2]))
         if len(rows) < 6:
             raise ValueError("Daftar sumber tidak memuat enam SMA pada kecamatan " + district)

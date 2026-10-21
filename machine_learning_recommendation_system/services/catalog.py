@@ -152,7 +152,7 @@ def extract_cost(school: Institution) -> str:
     if 'negeri' in ownership_str:
         return "Gratis (Sekolah Negeri)"
 
-    # Fallback biaya realistis jika data biaya di Supabase belum terisi
+    # Gunakan biaya perkiraan jika biaya sekolah belum diisi.
     hash_val = abs(hash(str(school.id))) % 4
     fallback_costs = [450000, 650000, 850000, 1250000]
     return f"Rp {fallback_costs[hash_val]:,}".replace(",", ".")

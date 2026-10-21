@@ -148,7 +148,7 @@ def upgrade():
         "ix_interest_assessments_student_profile_id", "interest_assessments", ["student_profile_id"]
     )
 
-    # ORM tidak diperlukan untuk seed; UUID deterministik menjaga kesesuaian impor.
+    # UUID seed harus tetap sama agar data impor mengacu ke akun yang benar.
     subjects = sa.table(
         "subjects",
         sa.column("id", sa.Uuid()),

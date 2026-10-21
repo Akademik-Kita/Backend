@@ -16,19 +16,17 @@ def calculate_academic_score(student_records: List[Any], program: Any) -> float:
     if not scores:
         return 75.0
     avg_score = sum(scores) / len(scores)
-    # Konversi ke skala 0-100
     return round(min(100.0, max(50.0, avg_score * 1.1)), 1)
 
 
 def calculate_interest_score(student_assessment: Any, program: Any) -> float:
     if not student_assessment:
         return 80.0
-    # Ambil rata-rata kecocokan minat
+    # Nilai baseline; belum dihitung dari profil minat.
     return 85.0
 
 
 def calculate_chance_score(academic_score: float, program: Any) -> float:
-    # Estimasi peluang berdasarkan skor akademik
     return round(min(95.0, max(40.0, academic_score * 0.95)), 1)
 
 
@@ -73,7 +71,6 @@ def calculate_distance_score(dist_km: float) -> float:
 
 def generate(db: Session, user_id: UUID, weights: Dict[str, float]) -> Dict[str, Any]:
     try:
-        # 1. Ambil data sekolah
         schools = db.scalars(school_query()).all()
         if not schools:
             return {"recommendations": [], "weights": weights}
@@ -81,7 +78,6 @@ def generate(db: Session, user_id: UUID, weights: Dict[str, float]) -> Dict[str,
         location = load_location(db, user_id) if user_id else None
         u_lat, u_lon = get_coords(location)
 
-        # 2. Normalisasi Bobot
         w_academic = float(weights.get("academic", 0.2))
         w_interest = float(weights.get("interest", 0.2))
         w_chance = float(weights.get("chance", 0.2))
@@ -94,14 +90,13 @@ def generate(db: Session, user_id: UUID, weights: Dict[str, float]) -> Dict[str,
             s_lat, s_lon = get_coords(school)
             dist_km = calculate_distance(s_lat, s_lon, u_lat, u_lon, school.id)
 
-            # Hitung skor per kriteria (skala 0 - 100)
+            # Skor akademik, minat, dan peluang di sini masih berupa nilai baseline.
             score_academic = 78.0
             score_interest = 95.0
             score_chance = 76.0
             score_distance = calculate_distance_score(dist_km)
             score_cost = calculate_cost_score(school)
 
-            # Total Skor Terbobot
             total_score = round(
                 (score_academic * w_academic) +
                 (score_interest * w_interest) +
@@ -111,7 +106,6 @@ def generate(db: Session, user_id: UUID, weights: Dict[str, float]) -> Dict[str,
                 1
             )
 
-            # Peluang
             chance_min = round(max(30.0, score_chance - 10.0), 2)
             chance_max = round(min(99.0, score_chance + 10.0), 2)
             chance_category = "Aman" if score_chance >= 75 else "Pertimbangan" if score_chance >= 55 else "Ketat"
@@ -136,7 +130,6 @@ def generate(db: Session, user_id: UUID, weights: Dict[str, float]) -> Dict[str,
                 }
             })
 
-        # Urutkan berdasarkan total_score tertinggi
         recommendations.sort(key=lambda x: x["total_score"], reverse=True)
 
         return {

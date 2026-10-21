@@ -239,13 +239,13 @@ def upsert(db, model, values, parent=None):
                 raise ValueError(f"ID {values['id']} sudah dimiliki induk lain")
         for key, value in values.items():
             setattr(obj, key, value)
-    # Parent di-flush sebelum child. Kesalahan menyebabkan rollback seluruh impor.
+    # Induk harus tersimpan sebelum data turunannya; kegagalan membatalkan seluruh impor.
     db.flush()
 
 
 def import_catalog(db, catalog: CatalogInput):
     try:
-        # Topological order parent wilayah sebelum child.
+        # Masukkan wilayah induk lebih dulu agar foreign key terpenuhi.
         pending = list(catalog.regions)
         inserted = set()
         while pending:

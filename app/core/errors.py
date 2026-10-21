@@ -28,7 +28,7 @@ def install_error_handlers(app):
 
     @app.exception_handler(SQLAlchemyError)
     async def database_error(_, error):
-        # Jangan log SQL exception/parameter karena bisa memuat snapshot data anak.
+        # Log cukup jenis error; SQL dan parameternya bisa berisi data siswa.
         logger.error("Database failure: %s", type(error).__name__)
         return error_response(503, "Database belum siap atau operasi database gagal")
 

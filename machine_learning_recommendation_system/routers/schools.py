@@ -56,7 +56,7 @@ def list_schools(
         query = query.where(Institution.ownership == ownership)
     if accreditation:
         query = query.where(Institution.accreditation == accreditation)
-    # Ukuran halaman tetap 10, response.data tetap array sesuai kontrak.
+    # Pertahankan respons array dengan 10 sekolah per halaman.
     schools = db.scalars(
         query.order_by(Institution.name, Institution.id).offset((page - 1) * 10).limit(10)
     ).all()
@@ -64,7 +64,7 @@ def list_schools(
     return {"data": [summary(s, location) for s in schools], "message": "Daftar SMA"}
 
 
-# Harus sebelum /{id}; agar 'compare' tidak diparse sebagai UUID.
+# Letakkan compare sebelum /{id} agar tidak dianggap sebagai UUID.
 @router.get("/compare", response_model=Envelope[list[SchoolDetail]])
 def compare_schools(
     ids: str = Query(..., max_length=200),

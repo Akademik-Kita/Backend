@@ -14,7 +14,7 @@ def get_engine():
         kwargs["connect_args"] = {"check_same_thread": False}
     else:
         kwargs["connect_args"] = {"connect_timeout": 5}
-        # Jangan membuka puluhan koneksi PostgreSQL melalui pooler per proses.
+        # Batasi pool per proses agar koneksi ke pooler tidak cepat habis.
         kwargs.update(pool_size=3, max_overflow=2, pool_timeout=10, pool_recycle=1800)
     engine = create_engine(url, **kwargs)
     if engine.dialect.name == "sqlite":
