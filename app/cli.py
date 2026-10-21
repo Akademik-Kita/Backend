@@ -10,7 +10,12 @@ from app.core.config import settings
 from app.core.database import get_engine
 from app.demo import DEMO_EMAIL, DEMO_PASSWORD, seed_demo_student
 from app.models import Base, Institution, Program, Subject
-from machine_learning_recommendation_system.services.importer import import_catalog, load_catalog
+from machine_learning_recommendation_system.services.importer import (
+    append_catalog,
+    import_catalog,
+    load_catalog,
+)
+from machine_learning_recommendation_system.services.simulation import complete_school_data
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,13 +30,24 @@ def main():
     sub.add_parser("migrate", help="Buat/perbarui seluruh skema backend")
     sub.add_parser("db-check", help="Cek koneksi, migrasi, jumlah katalog, dan RLS")
     sub.add_parser("demo-init", help="Siapkan demo lengkap pada SQLite lokal")
-    for name in ("validate", "import"):
+    complete = sub.add_parser("complete-school-data", help="Lengkapi metadata sekolah dengan simulasi konsisten")
+    complete.add_argument("--apply", action="store_true", help="Simpan tambahan ke database aktif")
+    for name in ("validate", "import", "append"):
         sub.add_parser(name).add_argument("path")
     args = parser.parse_args()
     try:
-        if args.command == "migrate":
+        if args.command == "complete-school-data":
+            with Session(get_engine()) as db:
+                with db.no_autoflush:
+                    report = complete_school_data(db)
+                if args.apply:
+                    db.commit()
+                else:
+                    db.rollback()
+            print({"applied": args.apply, **report})
+        elif args.command == "migrate":
             migrate()
-        elif args.command in ("validate", "import"):
+        elif args.command in ("validate", "import", "append"):
             catalog = load_catalog(args.path)
             if args.command == "validate":
                 print(f"Valid: {len(catalog.schools)} sekolah")
@@ -41,14 +57,24 @@ def main():
                 ):
                     raise ValueError("Gunakan database demo lokal untuk katalog sintetis")
                 with Session(get_engine()) as db:
-                    print(import_catalog(db, catalog))
+                    if args.command == "append":
+                        ids = append_catalog(db, catalog)
+                        for offset in range(0, len(ids), 250):
+                            with db.no_autoflush:
+                                complete_school_data(db, school_ids=ids[offset : offset + 250])
+                            db.flush()
+                            db.expunge_all()
+                        db.commit()
+                        print({"added_schools": len(ids)})
+                    else:
+                        print(import_catalog(db, catalog))
         elif args.command == "demo-init":
             if not settings().demo_mode or get_engine().dialect.name != "sqlite":
                 raise ValueError("Demo memerlukan DEMO_MODE=true dan SQLite lokal terpisah")
             migrate()
             with Session(get_engine()) as db:
                 seed_demo_student(db)
-                print(import_catalog(db, load_catalog(ROOT / "data/schools-demo.json")))
+            print("Database demo siap memakai katalog sekolah yang tersimpan.")
             print(f"Login demo: {DEMO_EMAIL}; password: {DEMO_PASSWORD}")
         else:
             engine = get_engine()

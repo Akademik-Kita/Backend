@@ -1,16 +1,18 @@
 from typing import Any, Dict, List, Optional
 from uuid import UUID
-from pydantic import Field, model_validator
+
 from fastapi.encoders import jsonable_encoder
+from pydantic import Field, model_validator
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
-from app.models import Institution, Program, RecommendationRun, RecommendationItem
-from machine_learning_recommendation_system.services.catalog import school_query
-from machine_learning_recommendation_system.services.catalog import calculate_distance, get_coords
-from machine_learning_recommendation_system.services.student import load_location
-
+from app.models import RecommendationItem, RecommendationRun
 from app.schemas.common import InterestScores, StrictModel
+from machine_learning_recommendation_system.services.catalog import (
+    calculate_distance,
+    get_coords,
+    school_query,
+)
 
 
 class Weights(StrictModel):
@@ -61,6 +63,14 @@ class RecommendationOut(StrictModel):
     chance_category: str
     chance_range: str
     breakdown: ScoreBreakdown
+    jurusan_id: Optional[UUID] = None
+    rank: int = 0
+    score_breakdown: Dict[str, float] = Field(default_factory=dict)
+    chance_low: float = 0
+    chance_high: float = 0
+    category: str = "realistis"
+    explanation: Dict[str, Any] = Field(default_factory=dict)
+    data_is_simulated: bool = False
 
 
 class RunOut(StrictModel):
@@ -79,6 +89,7 @@ class StudentContext(StrictModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
+
 def _weights_dict(weights: Any) -> Dict[str, float]:
     if hasattr(weights, "model_dump"):
         values = weights.model_dump()
@@ -92,7 +103,9 @@ def _weights_dict(weights: Any) -> Dict[str, float]:
     return {key: float(values.get(key, default)) for key, default in defaults.items()}
 
 
-def _build_recommendations(db: Session, student: Any, weights: Dict[str, float]) -> List[Dict[str, Any]]:
+def _build_recommendations(
+    db: Session, student: Any, weights: Dict[str, float]
+) -> List[Dict[str, Any]]:
     schools = db.scalars(school_query()).all()
     location = student if student is not None else None
     u_lat, u_lon = get_coords(location)
@@ -104,35 +117,101 @@ def _build_recommendations(db: Session, student: Any, weights: Dict[str, float])
         academic = 78.0
         interest = 80.0
         chance = round(min(95.0, max(40.0, academic * 0.95)), 1)
-        distance_score = 100.0 if distance <= 2 else 85.0 if distance <= 5 else 70.0 if distance <= 10 else 50.0 if distance <= 20 else 30.0
+        distance_score = (
+            100.0
+            if distance <= 2
+            else 85.0
+            if distance <= 5
+            else 70.0
+            if distance <= 10
+            else 50.0
+            if distance <= 20
+            else 30.0
+        )
         ownership = str(getattr(school, "ownership", "") or "").lower()
         if "negeri" in ownership:
             cost_score = 100.0
         else:
             costs = []
-            for program in (getattr(school, "programs", []) or []):
-                for cost in (getattr(program, "costs", []) or []):
+            for program in getattr(school, "programs", []) or []:
+                for cost in getattr(program, "costs", []) or []:
                     tuition = float(getattr(cost, "tuition_per_period", 0) or 0)
                     if tuition > 0:
-                        costs.append(tuition / 6 if getattr(cost, "period_type", "bulan") == "semester" else tuition)
+                        costs.append(
+                            tuition / 6
+                            if getattr(cost, "period_type", "bulan") == "semester"
+                            else tuition
+                        )
             minimum = min(costs) if costs else 0
-            cost_score = 70.0 if not minimum else 90.0 if minimum <= 500000 else 75.0 if minimum <= 1000000 else 60.0 if minimum <= 2000000 else 40.0
-        breakdown = {"academic": academic, "interest": interest, "chance": chance, "distance": distance_score, "cost": cost_score}
+            cost_score = (
+                70.0
+                if not minimum
+                else 90.0
+                if minimum <= 500000
+                else 75.0
+                if minimum <= 1000000
+                else 60.0
+                if minimum <= 2000000
+                else 40.0
+            )
+        breakdown = {
+            "academic": academic,
+            "interest": interest,
+            "chance": chance,
+            "distance": distance_score,
+            "cost": cost_score,
+        }
         total = round(sum(breakdown[k] * weights[k] for k in breakdown), 1)
         programs = getattr(school, "programs", []) or []
-        recommendations.append({
-            "school_id": school.id,
-            "school_name": school.name,
-            "jurusan_name": programs[0].name if programs else "Umum",
-            "total_score": total,
-            "score": total / 100,
-            "chance_category": "Aman" if chance >= 75 else "Pertimbangan" if chance >= 55 else "Ketat",
-            "chance_range": f"{max(30, chance - 10):.2f}%–{min(99, chance + 10):.2f}% peluang",
-            "breakdown": breakdown,
-            "_program_id": programs[0].id if programs else None,
-        })
+        recommendations.append(
+            {
+                "school_id": school.id,
+                "school_name": school.name,
+                "jurusan_name": programs[0].name if programs else "Umum",
+                "total_score": total,
+                "score": total / 100,
+                "chance_category": "Aman"
+                if chance >= 75
+                else "Pertimbangan"
+                if chance >= 55
+                else "Ketat",
+                "chance_range": f"{max(30, chance - 10):.2f}%–{min(99, chance + 10):.2f}% peluang",
+                "breakdown": breakdown,
+                "jurusan_id": programs[0].id if programs else None,
+                "data_is_simulated": any(
+                    marker in school.data_source.upper()
+                    for marker in ("SINTETIS:", "SIMULASI TAMBAHAN:")
+                ),
+                "_program_id": programs[0].id if programs else None,
+            }
+        )
     recommendations.sort(key=lambda x: x["total_score"], reverse=True)
-    return recommendations
+    return recommendations[:50]
+
+
+def public_recommendation(item, rank):
+    item = {key: value for key, value in item.items() if not key.startswith("_")}
+    breakdown = item.get("breakdown", {})
+    chance = float(breakdown.get("chance", 0))
+    item.update(
+        rank=rank,
+        score_breakdown=breakdown,
+        chance_low=round(max(0, chance - 10), 2),
+        chance_high=round(min(100, chance + 10), 2),
+        category="aman" if chance >= 75 else "realistis" if chance >= 55 else "ambisius",
+        explanation={
+            "positive": [
+                f"Skor jarak: {breakdown.get('distance', 0):.1f}/100.",
+                f"Skor biaya: {breakdown.get('cost', 0):.1f}/100.",
+            ],
+            "negative": [
+                "SIMULASI: data tambahan sekolah digunakan untuk pengujian fitur."
+                if item.get("data_is_simulated")
+                else "Perhitungan menggunakan model baseline untuk pengujian."
+            ],
+        },
+    )
+    return item
 
 
 def generate(db: Session, student: Any, weights: Any, hard_filters: bool = False):
@@ -143,17 +222,19 @@ def generate(db: Session, student: Any, weights: Any, hard_filters: bool = False
     if profile_id is None:
         # Router mewajibkan profil siswa; ini mencegah run tanpa pemilik.
         from fastapi import HTTPException
+
         raise HTTPException(status_code=409, detail="Profil siswa belum tersedia")
 
     clean_recommendations = [
-        {k: v for k, v in item.items() if not k.startswith("_")}
-        for item in recommendations
+        public_recommendation(item, rank) for rank, item in enumerate(recommendations, 1)
     ]
     run = RecommendationRun(
         student_profile_id=profile_id,
         target_type="sekolah",
         model_version="baseline-v1",
-        input_snapshot=jsonable_encoder({"weights": values, "recommendations": clean_recommendations}),
+        input_snapshot=jsonable_encoder(
+            {"weights": values, "recommendations": clean_recommendations}
+        ),
     )
     db.add(run)
     db.flush()
@@ -162,18 +243,20 @@ def generate(db: Session, student: Any, weights: Any, hard_filters: bool = False
         if program_id is None:
             continue
         breakdown = item["breakdown"]
-        chance = 76.0
-        db.add(RecommendationItem(
-            run_id=run.id,
-            program_id=program_id,
-            rank=rank,
-            total_score=item["total_score"],
-            score_breakdown=breakdown,
-            chance_low=max(0.0, chance - 10.0),
-            chance_high=min(100.0, chance + 10.0),
-            explanation={"summary": "Rekomendasi berdasarkan skor dasar dan bobot kriteria."},
-            category="aman" if chance >= 75 else "realistis" if chance >= 55 else "ambisius",
-        ))
+        chance = breakdown["chance"]
+        db.add(
+            RecommendationItem(
+                run_id=run.id,
+                program_id=program_id,
+                rank=rank,
+                total_score=item["total_score"],
+                score_breakdown=breakdown,
+                chance_low=max(0.0, chance - 10.0),
+                chance_high=min(100.0, chance + 10.0),
+                explanation=clean_recommendations[rank - 1]["explanation"],
+                category="aman" if chance >= 75 else "realistis" if chance >= 55 else "ambisius",
+            )
+        )
     db.commit()
     return {
         "recommendations": clean_recommendations,
@@ -190,9 +273,13 @@ def latest(db: Session, student_id: UUID):
     )
     if run is None:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="Belum ada rekomendasi tersimpan")
     snapshot = run.input_snapshot or {}
     return {
-        "recommendations": snapshot.get("recommendations", []),
+        "recommendations": [
+            public_recommendation(item, rank)
+            for rank, item in enumerate(snapshot.get("recommendations", []), 1)
+        ],
         "weights": _weights_dict(snapshot.get("weights", {})),
     }, "Rekomendasi terakhir berhasil diambil"

@@ -5,13 +5,13 @@
     "version": "2.0.0"
   },
   "paths": {
-    "/auth/register": {
+    "/api/auth/register": {
       "post": {
         "tags": [
           "Auth"
         ],
         "summary": "Register",
-        "operationId": "register_auth_register_post",
+        "operationId": "register_api_auth_register_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -46,13 +46,13 @@
         }
       }
     },
-    "/auth/login": {
+    "/api/auth/login": {
       "post": {
         "tags": [
           "Auth"
         ],
         "summary": "Login",
-        "operationId": "login_auth_login_post",
+        "operationId": "login_api_auth_login_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -87,13 +87,13 @@
         }
       }
     },
-    "/auth/me": {
+    "/api/auth/me": {
       "get": {
         "tags": [
           "Auth"
         ],
         "summary": "Me",
-        "operationId": "me_auth_me_get",
+        "operationId": "me_api_auth_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -113,13 +113,13 @@
         ]
       }
     },
-    "/profile": {
+    "/api/profile": {
       "get": {
         "tags": [
           "Profil siswa"
         ],
         "summary": "Get Profile",
-        "operationId": "get_profile_profile_get",
+        "operationId": "get_profile_api_profile_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -143,7 +143,7 @@
           "Profil siswa"
         ],
         "summary": "Update Profile",
-        "operationId": "update_profile_profile_put",
+        "operationId": "update_profile_api_profile_put",
         "requestBody": {
           "content": {
             "application/json": {
@@ -183,13 +183,13 @@
         ]
       }
     },
-    "/profile/subjects": {
+    "/api/profile/subjects": {
       "get": {
         "tags": [
           "Profil siswa"
         ],
         "summary": "Subjects",
-        "operationId": "subjects_profile_subjects_get",
+        "operationId": "subjects_api_profile_subjects_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -204,13 +204,13 @@
         }
       }
     },
-    "/profile/academic-records": {
+    "/api/profile/academic-records": {
       "get": {
         "tags": [
           "Profil siswa"
         ],
         "summary": "List Academic",
-        "operationId": "list_academic_profile_academic_records_get",
+        "operationId": "list_academic_api_profile_academic_records_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -234,7 +234,7 @@
           "Profil siswa"
         ],
         "summary": "Add Academic",
-        "operationId": "add_academic_profile_academic_records_post",
+        "operationId": "add_academic_api_profile_academic_records_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -274,13 +274,13 @@
         ]
       }
     },
-    "/profile/academic-records/{id}": {
+    "/api/profile/academic-records/{id}": {
       "put": {
         "tags": [
           "Profil siswa"
         ],
         "summary": "Update Academic",
-        "operationId": "update_academic_profile_academic_records__id__put",
+        "operationId": "update_academic_api_profile_academic_records__id__put",
         "security": [
           {
             "HTTPBearer": []
@@ -336,7 +336,7 @@
           "Profil siswa"
         ],
         "summary": "Delete Academic",
-        "operationId": "delete_academic_profile_academic_records__id__delete",
+        "operationId": "delete_academic_api_profile_academic_records__id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -378,13 +378,13 @@
         }
       }
     },
-    "/profile/achievements": {
+    "/api/profile/achievements": {
       "get": {
         "tags": [
           "Profil siswa"
         ],
         "summary": "List Achievements",
-        "operationId": "list_achievements_profile_achievements_get",
+        "operationId": "list_achievements_api_profile_achievements_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -408,7 +408,7 @@
           "Profil siswa"
         ],
         "summary": "Add Achievement",
-        "operationId": "add_achievement_profile_achievements_post",
+        "operationId": "add_achievement_api_profile_achievements_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -448,13 +448,13 @@
         ]
       }
     },
-    "/profile/achievements/{id}": {
+    "/api/profile/achievements/{id}": {
       "delete": {
         "tags": [
           "Profil siswa"
         ],
         "summary": "Delete Achievement",
-        "operationId": "delete_achievement_profile_achievements__id__delete",
+        "operationId": "delete_achievement_api_profile_achievements__id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -496,13 +496,13 @@
         }
       }
     },
-    "/profile/interest-assessment": {
+    "/api/profile/interest-assessment": {
       "post": {
         "tags": [
           "Profil siswa"
         ],
         "summary": "Add Assessment",
-        "operationId": "add_assessment_profile_interest_assessment_post",
+        "operationId": "add_assessment_api_profile_interest_assessment_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -542,13 +542,13 @@
         ]
       }
     },
-    "/profile/interest-assessment/latest": {
+    "/api/profile/interest-assessment/latest": {
       "get": {
         "tags": [
           "Profil siswa"
         ],
         "summary": "Latest Assessment",
-        "operationId": "latest_assessment_profile_interest_assessment_latest_get",
+        "operationId": "latest_assessment_api_profile_interest_assessment_latest_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -568,13 +568,13 @@
         ]
       }
     },
-    "/schools": {
+    "/api/schools": {
       "get": {
         "tags": [
           "Data SMA"
         ],
         "summary": "List Schools",
-        "operationId": "list_schools_schools_get",
+        "operationId": "list_schools_api_schools_get",
         "security": [
           {
             "HTTPBearer": []
@@ -595,6 +595,23 @@
                 }
               ],
               "title": "Kecamatan"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
             }
           },
           {
@@ -709,13 +726,13 @@
         }
       }
     },
-    "/schools/compare": {
+    "/api/schools/compare": {
       "get": {
         "tags": [
           "Data SMA"
         ],
         "summary": "Compare Schools",
-        "operationId": "compare_schools_schools_compare_get",
+        "operationId": "compare_schools_api_schools_compare_get",
         "security": [
           {
             "HTTPBearer": []
@@ -797,13 +814,13 @@
         }
       }
     },
-    "/schools/{id}/jurusan/{jurusan_id}/riwayat-penerimaan": {
+    "/api/schools/{id}/jurusan/{jurusan_id}/riwayat-penerimaan": {
       "get": {
         "tags": [
           "Data SMA"
         ],
         "summary": "History",
-        "operationId": "history_schools__id__jurusan__jurusan_id__riwayat_penerimaan_get",
+        "operationId": "history_api_schools__id__jurusan__jurusan_id__riwayat_penerimaan_get",
         "parameters": [
           {
             "name": "id",
@@ -890,13 +907,13 @@
         }
       }
     },
-    "/schools/{id}": {
+    "/api/schools/{id}": {
       "get": {
         "tags": [
           "Data SMA"
         ],
         "summary": "School Detail",
-        "operationId": "school_detail_schools__id__get",
+        "operationId": "school_detail_api_schools__id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -978,13 +995,13 @@
         }
       }
     },
-    "/recommendations/generate": {
+    "/api/recommendations/generate": {
       "post": {
         "tags": [
           "Rekomendasi"
         ],
         "summary": "Generate Recommendations",
-        "operationId": "generate_recommendations_recommendations_generate_post",
+        "operationId": "generate_recommendations_api_recommendations_generate_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1081,13 +1098,13 @@
         ]
       }
     },
-    "/recommendations/latest": {
+    "/api/recommendations/latest": {
       "get": {
         "tags": [
           "Rekomendasi"
         ],
         "summary": "Latest Recommendations",
-        "operationId": "latest_recommendations_recommendations_latest_get",
+        "operationId": "latest_recommendations_api_recommendations_latest_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1843,30 +1860,6 @@
         ],
         "title": "ErrorEnvelope"
       },
-      "Explanation": {
-        "properties": {
-          "positive": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Positive"
-          },
-          "negative": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Negative"
-          }
-        },
-        "type": "object",
-        "required": [
-          "positive",
-          "negative"
-        ],
-        "title": "Explanation"
-      },
       "GenerateRequest": {
         "properties": {
           "weights": {
@@ -1911,6 +1904,22 @@
           "nilai_maksimum": {
             "type": "number",
             "title": "Nilai Maksimum"
+          },
+          "quota": {
+            "type": "integer",
+            "title": "Quota"
+          },
+          "applicants": {
+            "type": "integer",
+            "title": "Applicants"
+          },
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
           }
         },
         "type": "object",
@@ -1919,7 +1928,11 @@
           "jalur",
           "nilai_minimum",
           "nilai_rata2",
-          "nilai_maksimum"
+          "nilai_maksimum",
+          "quota",
+          "applicants",
+          "accepted",
+          "source"
         ],
         "title": "HistoryOut"
       },
@@ -2320,60 +2333,90 @@
             "type": "string",
             "title": "School Name"
           },
-          "jurusan_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Jurusan Id"
-          },
           "jurusan_name": {
             "type": "string",
             "title": "Jurusan Name"
-          },
-          "rank": {
-            "type": "integer",
-            "title": "Rank"
           },
           "total_score": {
             "type": "number",
             "title": "Total Score"
           },
-          "score_breakdown": {
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "chance_category": {
+            "type": "string",
+            "title": "Chance Category"
+          },
+          "chance_range": {
+            "type": "string",
+            "title": "Chance Range"
+          },
+          "breakdown": {
             "$ref": "#/components/schemas/ScoreBreakdown"
+          },
+          "jurusan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jurusan Id"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank",
+            "default": 0
+          },
+          "score_breakdown": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Score Breakdown"
           },
           "chance_low": {
             "type": "number",
-            "title": "Chance Low"
+            "title": "Chance Low",
+            "default": 0
           },
           "chance_high": {
             "type": "number",
-            "title": "Chance High"
+            "title": "Chance High",
+            "default": 0
           },
           "category": {
             "type": "string",
-            "enum": [
-              "ambisius",
-              "realistis",
-              "aman"
-            ],
-            "title": "Category"
+            "title": "Category",
+            "default": "realistis"
           },
           "explanation": {
-            "$ref": "#/components/schemas/Explanation"
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Explanation"
+          },
+          "data_is_simulated": {
+            "type": "boolean",
+            "title": "Data Is Simulated",
+            "default": false
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "school_id",
           "school_name",
-          "jurusan_id",
           "jurusan_name",
-          "rank",
           "total_score",
-          "score_breakdown",
-          "chance_low",
-          "chance_high",
-          "category",
-          "explanation"
+          "score",
+          "chance_category",
+          "chance_range",
+          "breakdown"
         ],
         "title": "RecommendationOut"
       },
@@ -2418,23 +2461,22 @@
       },
       "RunOut": {
         "properties": {
-          "run_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Run Id"
-          },
-          "items": {
+          "recommendations": {
             "items": {
               "$ref": "#/components/schemas/RecommendationOut"
             },
             "type": "array",
-            "title": "Items"
+            "title": "Recommendations"
+          },
+          "weights": {
+            "$ref": "#/components/schemas/Weights"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
-          "run_id",
-          "items"
+          "recommendations",
+          "weights"
         ],
         "title": "RunOut"
       },
@@ -2490,6 +2532,47 @@
             },
             "type": "array",
             "title": "Jurusan Tersedia"
+          },
+          "biaya_per_bulan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Biaya Per Bulan"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "skor_rekomendasi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skor Rekomendasi"
+          },
+          "data_is_simulated": {
+            "type": "boolean",
+            "title": "Data Is Simulated",
+            "default": false
           },
           "institution_type": {
             "type": "string",
@@ -2646,6 +2729,47 @@
             },
             "type": "array",
             "title": "Jurusan Tersedia"
+          },
+          "biaya_per_bulan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Biaya Per Bulan"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "skor_rekomendasi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skor Rekomendasi"
+          },
+          "data_is_simulated": {
+            "type": "boolean",
+            "title": "Data Is Simulated",
+            "default": false
           }
         },
         "type": "object",
@@ -2664,45 +2788,35 @@
       },
       "ScoreBreakdown": {
         "properties": {
-          "akademik": {
+          "academic": {
             "type": "number",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Akademik"
+            "title": "Academic"
           },
-          "minat": {
+          "interest": {
             "type": "number",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Minat"
+            "title": "Interest"
           },
-          "peluang": {
+          "chance": {
             "type": "number",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Peluang"
+            "title": "Chance"
           },
-          "jarak": {
+          "distance": {
             "type": "number",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Jarak"
+            "title": "Distance"
           },
-          "biaya": {
+          "cost": {
             "type": "number",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Biaya"
+            "title": "Cost"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "akademik",
-          "minat",
-          "peluang",
-          "jarak",
-          "biaya"
+          "academic",
+          "interest",
+          "chance",
+          "distance",
+          "cost"
         ],
         "title": "ScoreBreakdown"
       },
@@ -2826,40 +2940,40 @@
       },
       "Weights": {
         "properties": {
-          "akademik": {
+          "academic": {
             "type": "number",
             "maximum": 1.0,
             "minimum": 0.0,
-            "title": "Akademik",
-            "default": 0.3
-          },
-          "minat": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Minat",
-            "default": 0.25
-          },
-          "peluang": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Peluang",
+            "title": "Academic",
             "default": 0.2
           },
-          "jarak": {
+          "interest": {
             "type": "number",
             "maximum": 1.0,
             "minimum": 0.0,
-            "title": "Jarak",
-            "default": 0.15
+            "title": "Interest",
+            "default": 0.2
           },
-          "biaya": {
+          "chance": {
             "type": "number",
             "maximum": 1.0,
             "minimum": 0.0,
-            "title": "Biaya",
-            "default": 0.1
+            "title": "Chance",
+            "default": 0.2
+          },
+          "distance": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Distance",
+            "default": 0.2
+          },
+          "cost": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Cost",
+            "default": 0.2
           }
         },
         "additionalProperties": false,

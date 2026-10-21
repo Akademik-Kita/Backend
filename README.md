@@ -46,7 +46,50 @@ Katalog `data/schools-jakarta-selatan.json` memuat 18 SMA nyata, dengan identita
 .\.venv\Scripts\python.exe -m app.cli import data\schools-jakarta-selatan.json
 ```
 
-Program, fasilitas, biaya, serta histori penerimaan yang belum bersumber dikembalikan sebagai daftar kosong. Sekolah tersebut tersedia di daftar/detail/perbandingan, tetapi belum menjadi kandidat rekomendasi. `last_verified_at` menyatakan pemeriksaan identitas/lokasi; bukan verifikasi seluruh data seleksi. 
+`last_verified_at` menyatakan pemeriksaan identitas/lokasi; bukan verifikasi seluruh data seleksi. Metadata yang dilengkapi secara acak diberi label simulasi seperti dijelaskan di bawah.
+
+## Katalog SMA nasional
+
+`data/schools-expanded.json` berisi 3.000 identitas SMA unik dari endpoint peta publik [Sekolah Kita Kemendikdasmen](https://sekolah.data.kemendikdasmen.go.id/sekolah), diambil pada 21 Oktober 2026. Data mencakup wilayah sekitar 56 kota; belum seluruh SMA Indonesia. NPSN, nama, alamat, status, akreditasi, dan koordinat mengikuti sumber. Respons dengan identitas/koordinat tidak valid atau provinsi yang tidak sesuai area pencarian dikeluarkan. Ringkasan pengambilan tersedia di `data/schools-expanded.report.json`.
+
+```powershell
+# Pengambilan ulang di Windows: cache 24 jam, jeda minimal 1 detik per permintaan
+.\.venv\Scripts\python.exe scripts\fetch_school_catalog.py --limit 3000
+.\.venv\Scripts\python.exe -m app.cli validate data\schools-expanded.json
+# Tambah identitas yang belum ada berdasarkan NPSN dan lengkapi dengan simulasi
+.\.venv\Scripts\python.exe -m app.cli append data\schools-expanded.json
+```
+
+`append` mempertahankan data sekolah yang sudah ada dan menyimpan seluruh penambahan dalam satu transaksi. Ambil cadangan sebelum menjalankannya pada database lain. Pengambil berhenti saat sumber menolak permintaan; tidak melewati CAPTCHA. Batas `--limit` adalah maksimum pengambilan dari area yang dikonfigurasi, bukan jaminan jumlah tersedia.
+
+Sesudah perluasan, Supabase memuat 3.002 sekolah, 9.006 program/biaya, dan 54.036 histori; SQLite lokal memuat 3.049 sekolah, 9.147 program/biaya, dan 54.882 histori. Selisih berasal dari katalog lama yang tetap dipertahankan. Semua sekolah memiliki program, biaya, fasilitas, jalur, dan histori. Penambahan ulang katalog diuji tidak menduplikasi data. Cadangan tersimpan di `.audit-backup/`; akun, profil, nilai, minat, dan RLS diverifikasi tidak berubah.
+
+Daftar sekolah menggunakan 10 hasil per halaman, dengan tombol sebelumnya/berikutnya di halaman Bandingkan SMA. Pencarian nama, NPSN, atau wilayah diperbarui otomatis setelah 300 ms; perubahan filter mengembalikan halaman ke awal dan respons pencarian lama diabaikan. Pencarian kota/kabupaten dan provinsi mencakup sekolah di wilayah turunannya. Rekomendasi menghitung seluruh kandidat dan mengembalikan 50 hasil teratas supaya respons dan tampilan tetap terbatas.
+
+## Pelengkapan data simulasi
+
+Identitas sekolah tetap mengikuti katalog yang tersimpan. Data yang belum tersedia dapat dilengkapi dengan simulasi konsisten berdasarkan NPSN: tiga peminatan, biaya tahun berjalan, fasilitas, dua jalur seleksi, dan histori tiga tahun selesai terakhir. Nilai tersimpan, tidak berubah saat refresh, dan data yang sudah ada dipertahankan.
+
+```powershell
+# Lihat rencana perubahan pada database aktif
+.\.venv\Scripts\python.exe -m app.cli complete-school-data
+# Simpan perubahan
+.\.venv\Scripts\python.exe -m app.cli complete-school-data --apply
+```
+
+Perintah memakai konfigurasi backend aktif: `.env` untuk Supabase, atau tetapkan `AKADEMIKKITA_ENV_FILE` ke `.env.demo` untuk SQLite lokal. `data_source`, histori, dan respons API menandai data tambahan sebagai simulasi. Tabel perbandingan, detail sekolah, dan kartu rekomendasi menampilkan labelnya. `demo-init` tidak lagi mengimpor identitas sekolah fiktif.
+
+Sebelum perluasan katalog, 18 identitas dummy di Supabase beserta 15 hasil rekomendasi terkait dibersihkan pada 21 Oktober 2026. Metadata simulasi awal dilengkapi untuk 18 sekolah asli di Supabase dan 130 sekolah asli pada SQLite lokal. Cadangan sebelum perubahan tersedia di `.audit-backup/` yang diabaikan Git.
+
+Engine rekomendasi pada versi ini masih menggunakan model baseline. Data simulasi ditujukan untuk pengujian alur aplikasi, bukan penilaian penerimaan sekolah.
+
+Tes fitur memakai SQLite sementara:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests/simulation -v
+```
+
+Tes mencakup pengisian ulang tanpa duplikat, pelestarian identitas/nilai yang sudah diisi, preview tanpa penyimpanan, login/profil, pencarian, detail, perbandingan, histori, generate, dan latest. Suite pytest lama masih terhalang impor `reflected_tables` pada `tests/conftest.py`; tes fitur ini dijalankan terpisah.
 
 ## Demo lengkap
 
@@ -54,7 +97,7 @@ Program, fasilitas, biaya, serta histori penerimaan yang belum bersumber dikemba
 .\run-demo.ps1
 ```
 
-Demo berjalan pada port **8001**, memakai `.env.demo` dan SQLite lokal terpisah. Script menyiapkan seluruh skema asli, sepuluh mapel, satu akun siswa, nilai, RIASEC, dan 18 sekolah sintetis. Login lewat `/auth/login` memakai email `siswa@example.invalid` dan password `demo-akademikkita-123`. Profil siswa dapat diubah lewat endpoint yang sama dengan backend utama.
+Demo berjalan pada port **8001**, memakai `.env.demo` dan SQLite lokal terpisah. Script menyiapkan skema, sepuluh mapel, satu akun siswa, nilai, dan tes minat. Katalog sekolah yang sudah tersimpan tetap dipakai. Login lewat `/api/auth/login` memakai email `siswa@example.invalid` dan password `demo-akademikkita-123`.
 
 Swagger demo: <http://127.0.0.1:8001/docs>. Data sintetis diberi label dalam hasil rekomendasi. `demo-init` menolak PostgreSQL, dan importer CLI menolak katalog sintetis saat `DEMO_MODE=false`.
 

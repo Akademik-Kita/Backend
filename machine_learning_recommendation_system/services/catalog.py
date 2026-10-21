@@ -6,8 +6,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.models import Institution, Program, Cost, Facility
-
+from app.models import AdmissionTrack, Institution, Program
 
 DEFAULT_INTEREST = {
     "realistic": 50.0,
@@ -58,14 +57,15 @@ def calculate_distance(s_lat: Optional[float], s_lon: Optional[float], u_lat: Op
     return round(1.5 + (hash_val / 10.0), 1)
 
 
-def school_query():
+def school_query(include_history=False):
     options = [
         selectinload(Institution.programs).selectinload(Program.costs),
         selectinload(Institution.facilities),
         selectinload(Institution.region)
     ]
     if hasattr(Program, 'tracks'):
-        options.append(selectinload(Institution.programs).selectinload(Program.tracks))
+        tracks = selectinload(Institution.programs).selectinload(Program.tracks)
+        options.append(tracks.selectinload(AdmissionTrack.history) if include_history else tracks)
     return select(Institution).options(*options)
 
 
@@ -203,6 +203,7 @@ def summary(school: Institution, location: Any = None) -> Dict[str, Any]:
         "biaya_per_bulan": extract_cost(school),
         "score": calc_score,
         "skor_rekomendasi": f"{calc_score}%",
+        "data_is_simulated": any(marker in str(school.data_source).upper() for marker in ("SINTETIS:", "SIMULASI TAMBAHAN:")),
     }
 
 

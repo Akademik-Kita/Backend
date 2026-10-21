@@ -191,6 +191,42 @@ def load_catalog(path):
     return CatalogInput.model_validate(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
+def append_catalog(db, catalog: CatalogInput):
+    """Add missing identities by NPSN without overwriting curated school data."""
+    from sqlalchemy import select
+
+    regions = {
+        (r.type, r.parent_id, r.name.strip().casefold()): r.id for r in db.scalars(select(Region))
+    }
+    mapped = {}
+    pending = list(catalog.regions)
+    while pending:
+        ready = [r for r in pending if r.parent_id is None or r.parent_id in mapped]
+        for region in ready:
+            parent = mapped.get(region.parent_id)
+            key = (region.type, parent, region.name.strip().casefold())
+            if key not in regions:
+                db.add(Region(**{**region.model_dump(), "parent_id": parent}))
+                regions[key] = region.id
+            mapped[region.id] = regions[key]
+            pending.remove(region)
+        db.flush()
+    codes = set(db.scalars(select(Institution.npsn_or_code)))
+    added = []
+    for school in catalog.schools:
+        if not school.npsn_or_code:
+            raise ValueError("Penambahan sekolah membutuhkan NPSN")
+        if school.npsn_or_code in codes:
+            continue
+        values = school.model_dump(exclude={"programs", "facilities"})
+        values["region_id"] = mapped[school.region_id]
+        db.add(Institution(**values))
+        added.append(school.id)
+        codes.add(school.npsn_or_code)
+    db.flush()
+    return added
+
+
 def upsert(db, model, values, parent=None):
     obj = db.get(model, values["id"])
     if obj is None:

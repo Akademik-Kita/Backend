@@ -3,6 +3,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -26,6 +27,7 @@ def location_for(db, user_id):
 @router.get("", response_model=Envelope[list[SchoolSummary]])
 def list_schools(
     kecamatan: str | None = None,
+    search: str | None = Query(None, max_length=200),
     ownership: Ownership | None = None,
     accreditation: str | None = None,
     page: int = Query(1, ge=1),
@@ -33,8 +35,23 @@ def list_schools(
     user_id: UUID | None = Depends(get_optional_user),
 ):
     query = school_query()
-    if kecamatan:
-        query = query.join(Region).where(Region.name.ilike(kecamatan))
+    if kecamatan and kecamatan.strip():
+        query = query.join(Region).where(Region.name.ilike(kecamatan.strip()))
+    if search and search.strip():
+        keyword = search.strip()
+        regions = (
+            select(Region.id)
+            .where(Region.name.icontains(keyword, autoescape=True))
+            .cte("search_regions", recursive=True)
+        )
+        regions = regions.union(select(Region.id).where(Region.parent_id == regions.c.id))
+        query = query.where(
+            or_(
+                Institution.name.icontains(keyword, autoescape=True),
+                Institution.npsn_or_code.icontains(keyword, autoescape=True),
+                Institution.region_id.in_(select(regions.c.id)),
+            )
+        )
     if ownership:
         query = query.where(Institution.ownership == ownership)
     if accreditation:
@@ -76,7 +93,7 @@ def history(
     jurusan_id: UUID,
     db: Session = Depends(get_db),
 ):
-    school = db.scalar(school_query().where(Institution.id == id))
+    school = db.scalar(school_query(include_history=True).where(Institution.id == id))
     if school is None:
         raise HTTPException(404, "SMA tidak ditemukan")
     program = next((p for p in school.programs if p.id == jurusan_id), None)
@@ -90,6 +107,10 @@ def history(
             "nilai_minimum": h.min_score,
             "nilai_rata2": h.avg_score,
             "nilai_maksimum": h.max_score,
+            "quota": t.quota,
+            "applicants": h.applicants,
+            "accepted": h.accepted,
+            "source": h.source,
         }
         for t in program.tracks
         for h in t.history

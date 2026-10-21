@@ -20,6 +20,7 @@ class SchoolSummary(BaseModel):
     biaya_per_bulan: str | None = None
     score: float | None = None
     skor_rekomendasi: str | float | None = None
+    data_is_simulated: bool = False
 
 
 class CostOut(BaseModel):
@@ -69,3 +70,7 @@ class HistoryOut(BaseModel):
     nilai_minimum: float
     nilai_rata2: float
     nilai_maksimum: float
+    quota: int
+    applicants: int
+    accepted: int
+    source: str
